@@ -19,7 +19,7 @@
             android:layout_width="8dp"
             android:layout_height="8dp"
             android:layout_marginStart="16dp"
-            android:background="@drawable/blinking_circle"
+            android:background="@drawable/trans_circle"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

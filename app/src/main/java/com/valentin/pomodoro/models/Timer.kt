@@ -5,4 +5,5 @@ data class Timer (
     var leftMs: Long,
     var totalMs: Long,
     var isActive: Boolean,
-    var isFinished: Boolean = false)
+    var isFinished: Boolean = false,
+    var animStage:Int = 0)

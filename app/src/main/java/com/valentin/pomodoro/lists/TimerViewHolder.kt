@@ -38,28 +38,30 @@ class TimerViewHolder (
         binding.stopwatchTimer.text = text
         binding.cvProgress.setPeriod(timer.totalMs)
         binding.cvProgress.setCurrent(timer.totalMs - timer.leftMs)
+        if (timer.animStage == 0){
+            val context = binding.root.context
+            binding.blinkingIndicator.setImageDrawable(context.getDrawable(R.drawable.trans_circle))
+        }
+        else {
+            val context = binding.root.context
+            binding.blinkingIndicator.setImageDrawable(context.getDrawable(R.drawable.circle))
+        }
         if (timer.isActive) {
             binding.btStart.text = "Stop"
-//            binding.blinkingIndicator.isInvisible = false
-//            (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
         }
         else {
             binding.btStart.text = "Start"
-//            binding.blinkingIndicator.isInvisible = true
-//            (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
         }
 
 
         if (timer.isFinished){
             binding.clTimerItem.setBackgroundColor(resources.getColor(R.color.red_variant))
-            //binding.root.setBackgroundColor(resources.getColor(R.color.red_variant))
             binding.btStart.text = "Finished"
         }
         else
         {
             binding.clTimerItem.setBackgroundColor(resources.getColor(R.color.white))
         }
-
         initButtonsListeners(timer)
     }
 
@@ -75,24 +77,11 @@ class TimerViewHolder (
             }
 
             if (timer.isActive) {
-                // stop timer
-//                binding.blinkingIndicator.isInvisible = true
-//                (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
                 listener.stopTimer(timer)
             }
             else{
-                // start timer
-//                binding.blinkingIndicator.isInvisible = false
-//                (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
                 listener.startTimer(timer)
             }
         }
-    }
-
-    private companion object {
-
-        private const val START_TIME = "00:00:00:00"
-        private const val UNIT_TEN_MS = 10L
-        private const val PERIOD  = 1000L * 60L * 60L * 24L // Day
     }
 }

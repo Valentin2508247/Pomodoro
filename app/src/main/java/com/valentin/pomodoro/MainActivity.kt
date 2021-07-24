@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.view.isInvisible
 import androidx.lifecycle.*
@@ -20,14 +21,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.lang.Exception
 
 class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
 
     private val TAG = "MainActivity2"
     private lateinit var binding: ActivityMainBinding
-    private var current = 0L
-    private var startTime = 0L
-
 
 
     private var nextId = 0
@@ -36,6 +35,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
     private var countDownTimer: CountDownTimer? = null
     private var currentTime: Long? = null // ms
     private var currentTimer: Timer? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,17 +53,28 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
     private fun initListeners() {
         binding.btAdd.setOnClickListener {
             if (binding.etTime.text.isNotEmpty()){
-                val minutes = binding.etTime.text.toString().toInt()
-                if (minutes > 0) {
-                    val timer = Timer(nextId++, minutes.toLong() * 60 * 1000, minutes.toLong() * 60 * 1000,
-                        isActive = false,
-                        isFinished = false
-                    )
-                    Log.d(TAG, "Timer: $timer")
-                    //Toast.makeText(this, "Add timer: $minutes", Toast.LENGTH_SHORT).show()
-                    timers.add(timer)
-                    mAdapter.submitList(timers)
-                    mAdapter.notifyItemInserted(timers.size - 1)
+                try {
+                    val minutes = binding.etTime.text.toString().toInt()
+                    if (minutes >= 1440){
+                        Toast.makeText(this@MainActivity, "Too big input", Toast.LENGTH_SHORT).show()
+                        binding.etTime.setText("")
+                        return@setOnClickListener
+                    }
+                    if (minutes > 0) {
+                        val timer = Timer(nextId++, minutes.toLong() * 60 * 1000, minutes.toLong() * 60 * 1000,
+                            isActive = false,
+                            isFinished = false
+                        )
+                        Log.d(TAG, "Timer: $timer")
+                        timers.add(timer)
+                        mAdapter.submitList(timers)
+                        mAdapter.notifyItemInserted(timers.size - 1)
+                    }
+                }
+                catch (ex: Exception){
+                    Log.d(TAG, ex.message.toString())
+                    Toast.makeText(this@MainActivity, "Too big input", Toast.LENGTH_SHORT).show()
+                    binding.etTime.setText("")
                 }
             }
         }
@@ -85,6 +96,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
 
     override fun stopTimer(timer: Timer) {
         timer.isActive = false
+        timer.animStage = 0
         currentTimer = null
         Log.d(TAG, "Stop timer")
         countDownTimer?.cancel()
@@ -113,11 +125,15 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
 
     private fun getCountDownTimer(timer: Timer): CountDownTimer {
         countDownTimer?.cancel()
-        return object : CountDownTimer(timer.leftMs, 10L) {
-            val interval = 10L
+        return object : CountDownTimer(timer.leftMs, 100L) {
 
             override fun onTick(millisUntilFinished: Long) {
                 Log.d(TAG, "Tick: $millisUntilFinished")
+                if (millisUntilFinished % 1400L <= 700L)
+                    timer.animStage = 1
+                else
+                    timer.animStage = 0
+                //Log.d(TAG, "Timer: $timer")
                 timer.leftMs = millisUntilFinished
                 val index = timers.indexOfFirst { it.id == timer.id }
                 mAdapter.notifyItemChanged(index)
@@ -127,10 +143,14 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
                 Log.d(TAG, "Tick finish")
                 timer.isFinished = true
                 stopTimer(timer)
-//                val index = timers.indexOfFirst { it.id == timer.id }
-//                mAdapter.notifyItemChanged(index)
             }
         }
+    }
+
+    override fun onBackPressed() {
+        Log.d("TAG", "Pressed back")
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
+        super.onBackPressed()
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
@@ -143,27 +163,11 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onAppDestroyed() {
-        currentTimer?.let {
-            val stopIntent = Intent(this, ForegroundService::class.java)
-            stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
-            startService(stopIntent)
-        }
-    }
-
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onAppForegrounded() {
         val stopIntent = Intent(this, ForegroundService::class.java)
+
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
         startService(stopIntent)
-    }
-
-
-    private companion object {
-
-        private const val INTERVAL = 100L
-        private const val PERIOD = 1000L * 30 // 30 sec
-        private const val REPEAT = 10 // 10 times
     }
 }
