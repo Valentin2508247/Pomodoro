@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
         return object : CountDownTimer(timer.leftMs, 100L) {
 
             override fun onTick(millisUntilFinished: Long) {
-                Log.d(TAG, "Tick: $millisUntilFinished")
+                //Log.d(TAG, "Tick: $millisUntilFinished")
                 if (millisUntilFinished % 1400L <= 700L)
                     timer.animStage = 1
                 else
@@ -161,6 +161,16 @@ class MainActivity : AppCompatActivity(), LifecycleObserver, TimerListener {
             startIntent.putExtra(STARTED_TIMER_TIME_MS, it.leftMs)
             startService(startIntent)
         }
+    }
+
+
+    override fun onDestroy() {
+        val stopIntent = Intent(this, ForegroundService::class.java)
+
+        Log.d(TAG, "onDestroy")
+        stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
+        startService(stopIntent)
+        super.onDestroy()
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)

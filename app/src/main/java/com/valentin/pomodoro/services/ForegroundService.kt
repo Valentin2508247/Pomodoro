@@ -156,7 +156,7 @@ class ForegroundService : Service() {
             val interval = 1000L
 
             override fun onTick(millisUntilFinished: Long) {
-                Log.d(TAG, "Tick $millisUntilFinished")
+                //Log.d(TAG, "Tick $millisUntilFinished")
 
                 var seconds = millisUntilFinished / 1000
                 var minutes = seconds / 60
